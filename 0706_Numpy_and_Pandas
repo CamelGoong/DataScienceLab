@@ -1,0 +1,111 @@
+# 대기환경 데이터 전처리
+- numpy와 pandas를 활용해 충청북도의 대기환경 데이터를 가공
+- 데이터 출처: 에어코리아
+
+import pandas as pd
+import numpy as np
+
+'air_19_1.csv' 파일을 데이터프레임으로 읽어주세요. encoding은 'CP949'입니다.
+
+air = pd.read_csv('air_19_1.csv', encoding = 'CP949')
+print(air)
+
+air.info()
+
+모든 결측값을 0으로 바꿔주세요.
+
+air.fillna(0)
+
+결측값을 확인해주세요
+
+SO2, CO, O3, NO2, PM10, PM25 컬럼의 이름을 아황산가스, 일산화탄소, 오존, 이산화질소, 미세먼지, 초미세먼지로 바꿔주세요
+
+air = air.rename({'SO2':'아황산가스'},axis=1)
+air = air.rename({'CO':'일산화탄소'},axis=1)
+air = air.rename({'O3' : '오존'},axis=1)
+air = air.rename({'NO2' : '이산화질소'},axis=1)
+air = air.rename({'PM10' : '미세먼지'},axis=1)
+air = air.rename({'PM25' : '초미세먼지'},axis=1)
+print(air)
+
+측정일시 컬럼에서 연도, 월, 일을 추출해 연도, 월, 일 컬럼을 새로 생성해주세요. (힌트: map 사용)
+
+air['연도'] = air.측정일시.astype('str').map(lambda x: x[0:4])
+air['월'] = air.측정일시.astype('str').map(lambda x: x[4:6])
+air['일'] = air.측정일시.astype('str').map(lambda x: x[6:])
+print(air)
+
+air에서 '측정소명', '측정일시','주소' 컬럼을 삭제해주세요.
+
+air.drop(['측정소명','측정일시','주소'],axis=1,inplace=True)
+print(air)
+
+air 데이터를 측정소코드, 연도, 월, 일을 기준으로 오름차순 정렬해주세요.
+
+air.sort_values(by = ['측정소코드', '연도', '월', '일'], axis = 0, inplace=True)
+print(air)
+
+정렬을 하면서 인덱스가 뒤섞였습니다. 데이터의 인덱스를 0부터 15133까지 숫자로 초기화해주세요.
+
+air = air.reset_index(drop=True)
+print(air)
+
+groupby를 이용해 지역별 미세먼지 평균을 구하고, 구한 데이터프레임을 dust 변수에 할당하세요. 
+
+dust = air.groupby(['지역']).agg({'미세먼지' : 'mean' })
+print(dust)
+
+dust의 인덱스는 '지역'입니다. 인덱스를 컬럼으로 빼주세요.
+
+dust['지역']=dust.index
+dust = dust.reset_index(drop=True)
+
+cols = ["지역", "미세먼지"]
+dust = pd.DataFrame(dust, columns=cols)
+dust
+
+dust에서, 충북 전체의 미세먼지 평균 초과의 지역만 추출해 dust2에 할당해주세요.
+
+dust2 = dust[dust['미세먼지'] > dust['미세먼지'].mean()]
+
+print(dust2)
+
+groupby를 이용해 지역별 오존 평균을 구하고, 구한 데이터프레임을 ozon 변수에 할당하세요.
+
+ozon = air.groupby(['지역']).agg({'오존' : 'mean'})
+print(ozon)
+
+dust2와 ozon을 병합하되, 두 데이터에 모두 있는 지역만 병합해주세요. 
+
+data = pd.merge(dust2, ozon, left_on='지역', right_on='지역', how='inner')
+data
+
+병합한 데이터를 한글이 깨지지 않게 csv로 저장해주세요. 
+
+data.to_csv('dust_and_ozon.csv', index=False,encoding='CP949')
+
+인덱스는 일(day), 컬럼은 지역이고 값은 미세먼지의 평균인 피벗 테이블을 생성해주세요.
+
+piv = pd.pivot_table(air, index='일', columns='지역', values='미세먼지',aggfunc='mean')
+piv
+
+지역 컬럼을 기준으로 오름차순(가나다 순)으로 정렬해주세요.
+(힌트: 정렬 기준은 piv.columns.tolist().sort() 사용 )
+
+piv.columns.tolist().sort()
+piv
+
+일별 미세먼지 평균을 피벳 테이블의 새로운 컬럼으로 추가해주세요.
+
+a = air.groupby(['일']).agg({'미세먼지':'mean'})
+a
+piv['일별 미세먼지 평균'] = a['미세먼지']
+piv
+
+지역별 미세먼지 평균을 피벗 테이블의 마지막 행으로 추가해주세요
+
+a1 = air.groupby(['지역']).agg({'미세먼지':'mean'})
+piv.loc['지역별 미세먼지 평균',:]=a1['미세먼지']
+piv
+
+수고하셨습니다!
