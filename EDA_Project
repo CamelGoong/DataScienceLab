@@ -1,0 +1,268 @@
+# COVID_거리두기 텍스트마이닝
+# 댓글을 달 빈 리스트를 생성합니다.
+Url_List = [] # URL 보관하는 리스트
+Comments_count = 0
+
+
+# 라이브러리를 로드합니다.
+from bs4 import BeautifulSoup
+import requests
+import re
+import sys
+ 
+# 네이버 뉴스 url을 입력합니다.
+# 6월
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=015&aid=0004370845")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=056&aid=0010861378")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=001&aid=0011713373")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=421&aid=0004724983")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=101&oid=008&aid=0004432556")
+
+# 7월
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=001&aid=0011780478")
+Url_List.append("https://sports.news.naver.com/news.nhn?oid=003&aid=0009998208")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=101&oid=417&aid=0000575485")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=366&aid=0000563007")
+Url_List.append("https://sports.news.naver.com/news.nhn?oid=108&aid=0002881611")
+
+# 8월
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=100&oid=003&aid=0010048433")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=100&oid=001&aid=0011849065")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=215&aid=0000897592")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=101&oid=015&aid=0004407090")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=100&oid=025&aid=0003030826")
+
+# 9월
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=001&aid=0011914461")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=005&aid=0001366761")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=101&oid=056&aid=0010908931")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=101&oid=056&aid=0010908931")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=437&aid=0000248752")
+
+# 10월
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=014&aid=0004520499")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=087&aid=0000818868")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=001&aid=0011982011")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=366&aid=0000611262")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=016&aid=0001744005")
+
+# 11월
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=001&aid=0012047703")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=003&aid=0010213482")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=003&aid=0010212603")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=022&aid=0003527895")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=009&aid=0004706085")
+
+# 12월
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=009&aid=0004706085")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=003&aid=0010270750")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=018&aid=0004818576")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=082&aid=0001056287")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=079&aid=0003449680")
+
+for url in Url_List:
+  List = []
+  oid = url.split("oid=")[1].split("&")[0] #422
+  aid = url.split("aid=")[1] #0000430957
+  page = 1
+  header = {
+    "User-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36",
+    "referer": url,
+  }
+ 
+  while True:
+      c_url = "https://apis.naver.com/commentBox/cbox/web_neo_list_jsonp.json?ticket=news&templateId=default_society&pool=cbox5&_callback=jQuery1707138182064460843_1523512042464&lang=ko&country=&objectId=news" + oid + "%2C" + aid + "&categoryId=&pageSize=20&indexSize=10&groupId=&listType=OBJECT&pageType=more&page=" + str(
+          page) + "&refresh=false&sort=FAVORITE"
+    # 파싱하는 단계입니다.
+      r = requests.get(c_url, headers=header)
+      cont = BeautifulSoup(r.content, "html.parser")
+      total_comm = str(cont).split('comment":')[1].split(",")[0]
+ 
+      match = re.findall('"contents":([^\*]*),"userIdNo"', str(cont))
+
+    # 댓글을 리스트에 중첩합니다.
+      List.append(match)
+
+    # 한번에 댓글이 20개씩 보이기 때문에 한 페이지씩 몽땅 댓글을 긁어 옵니다.
+      if int(total_comm) <= ((page) * 20):
+        break
+      else:
+          page += 1
+ 
+ 
+# 여러 리스트들을 하나로 묶어 주는 함수입니다.
+  def flatten(l):
+      flatList = []
+      for elem in l:
+          # if an element of a list is a list
+          # iterate over this list and add elements to flatList
+          if type(elem) == list:
+              for e in elem:
+                  flatList.append(e)
+          else:
+              flatList.append(elem)
+      return flatList
+ 
+ 
+# 리스트 결과입니다.
+  allComments = flatten(List)
+  Comments_count += len(allComments)
+  sys.stdout = open('/content/drive/MyDrive/DSL/NaverNewsData/20년 6~12월 신문기사 댓글.txt','a')
+  for comments in allComments:
+    print(comments)
+
+print('총 누적 댓글갯수')
+print(Comments_count, '개')
+
+# 댓글을 달 빈 리스트를 생성합니다.
+Url_List = [] # URL 보관하는 리스트
+Comments_count = 0
+
+
+# 라이브러리를 로드합니다.
+from bs4 import BeautifulSoup
+import requests
+import re
+import sys
+ 
+# 네이버 뉴스 url을 입력합니다.
+# 1월
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=100&oid=001&aid=0012174304")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=028&aid=0002530956")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=100&oid=055&aid=0000871597")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=001&aid=0012173576")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=100&oid=421&aid=0005138218")
+
+# 2월
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=003&aid=0010367620")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=100&oid=001&aid=0012227120")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=081&aid=0003167149")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=005&aid=0001415396")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=437&aid=0000260087")
+
+# 3월
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=001&aid=0012294038")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=101&oid=014&aid=0004610656")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=101&oid=014&aid=0004610656")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=015&aid=0004520343")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=001&aid=0012293227")
+
+# 4월
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=001&aid=0012365068")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=100&oid=023&aid=0003611310")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=052&aid=0001582339")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=001&aid=0012362139")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=100&oid=001&aid=0012363965")
+
+# 5월
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=005&aid=0001443569")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=100&oid=011&aid=0003917026")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=032&aid=0003077019")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=028&aid=0002546431")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=629&aid=0000085802")
+
+# 6월
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=421&aid=0005448788")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=421&aid=0005448460")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=001&aid=0012494031")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=215&aid=0000968648")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=028&aid=0002550648")
+
+# 7월
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=082&aid=0001109309")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=003&aid=0010629277")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=100&oid=056&aid=0011089647")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=102&oid=001&aid=0012552264")
+Url_List.append("https://news.naver.com/main/read.naver?mode=LSD&mid=sec&sid1=100&oid=005&aid=0001459435")
+
+for url in Url_List:
+  List = []
+  oid = url.split("oid=")[1].split("&")[0] #422
+  aid = url.split("aid=")[1] #0000430957
+  page = 1
+  header = {
+    "User-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36",
+    "referer": url,
+  }
+ 
+  while True:
+      c_url = "https://apis.naver.com/commentBox/cbox/web_neo_list_jsonp.json?ticket=news&templateId=default_society&pool=cbox5&_callback=jQuery1707138182064460843_1523512042464&lang=ko&country=&objectId=news" + oid + "%2C" + aid + "&categoryId=&pageSize=20&indexSize=10&groupId=&listType=OBJECT&pageType=more&page=" + str(
+          page) + "&refresh=false&sort=FAVORITE"
+    # 파싱하는 단계입니다.
+      r = requests.get(c_url, headers=header)
+      cont = BeautifulSoup(r.content, "html.parser")
+      total_comm = str(cont).split('comment":')[1].split(",")[0]
+ 
+      match = re.findall('"contents":([^\*]*),"userIdNo"', str(cont))
+
+    # 댓글을 리스트에 중첩합니다.
+      List.append(match)
+
+    # 한번에 댓글이 20개씩 보이기 때문에 한 페이지씩 몽땅 댓글을 긁어 옵니다.
+      if int(total_comm) <= ((page) * 20):
+        break
+      else:
+          page += 1
+ 
+ 
+# 여러 리스트들을 하나로 묶어 주는 함수입니다.
+  def flatten(l):
+      flatList = []
+      for elem in l:
+          # if an element of a list is a list
+          # iterate over this list and add elements to flatList
+          if type(elem) == list:
+              for e in elem:
+                  flatList.append(e)
+          else:
+              flatList.append(elem)
+      return flatList
+ 
+ 
+# 리스트 결과입니다.
+  allComments = flatten(List)
+  Comments_count += len(allComments)
+  sys.stdout = open('/content/drive/MyDrive/DSL/NaverNewsData/21년 1~7월 신문기사 댓글.txt','a')
+  for comments in allComments:
+    print(comments)
+
+print('총 누적 댓글갯수')
+print(Comments_count, '개')
+
+#  필요한 라이브러리 import
+from mpl_toolkits.mplot3d import axes3d
+import matplotlib.pyplot as plt
+import numpy as np
+!pip install konlpy
+import konlpy
+from collections import Counter
+
+from collections import Counter
+!pip install konlpy
+import konlpy
+
+komoran = konlpy.tag.Komoran()
+
+sentence = "나는 사과를 사과를 사과를 배를 배를 배를 배를 포도를 포도를 포도를 키위를 키위를 키위를 맛있게 수박을 먹고있다."
+komoran_nouns = komoran.nouns(sentence)
+komoran_nouns = " ".join(komoran_nouns)
+
+
+words = komoran_nouns.split(" ")
+
+
+  # 단어, ID 대응 목록 형성
+word_to_id = {}
+id_to_word = {}
+for word in words:
+  if word not in word_to_id:
+    new_id = len(word_to_id)
+    word_to_id[word] = new_id
+    id_to_word[new_id] = word
+
+  # corpus(말뭉치) 형성
+corpus = np.array([word_to_id[w] for w in words])
+
+c = Counter(words)
+
+Top_word = c.most_common(4)
